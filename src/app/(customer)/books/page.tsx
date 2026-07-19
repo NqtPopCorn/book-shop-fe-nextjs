@@ -18,14 +18,16 @@ export default function BooksPage() {
           {
             id: 1,
             title: "Clean Code: A Handbook of Agile Software Craftsmanship",
-            price: 550000,
-            author: { name: "Robert C. Martin" },
+            listPrice: 600000,
+            sellingPrice: 550000,
+            authors: ["Robert C. Martin"],
           },
           {
             id: 2,
             title: "Chí Phèo",
-            price: 85000,
-            author: { name: "Nam Cao" },
+            listPrice: 90000,
+            sellingPrice: 85000,
+            authors: ["Nam Cao"],
           },
         ];
       }
@@ -82,13 +84,23 @@ export default function BooksPage() {
                     {book.title}
                   </h3>
                   <div className="text-[12px] text-gray-500 mt-1">
-                    {book.author?.name}
+                    {book.authors?.[0] || "-"}
                   </div>
-                  <div className="text-[#c92127] font-bold mt-2">
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(book.price)}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-[#c92127] font-bold">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(book.sellingPrice || 0)}
+                    </span>
+                    {book.listPrice && book.listPrice > book.sellingPrice && (
+                      <span className="text-gray-400 text-xs line-through">
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(book.listPrice)}
+                      </span>
+                    )}
                   </div>
                 </Link>
                 <Button

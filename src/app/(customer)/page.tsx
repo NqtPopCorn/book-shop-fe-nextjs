@@ -135,11 +135,21 @@ export default function HomePage() {
                   <h4 className="font-medium text-sm text-gray-800 line-clamp-2 group-hover:text-red-600 transition-colors">
                     {book.title}
                   </h4>
-                  <div className="mt-2 text-red-600 font-bold">
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(book.price)}
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-red-600 font-bold">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(book.sellingPrice || 0)}
+                    </span>
+                    {book.listPrice && book.listPrice > book.sellingPrice && (
+                      <span className="text-gray-400 text-xs line-through">
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(book.listPrice)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>

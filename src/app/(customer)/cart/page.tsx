@@ -51,13 +51,22 @@ export default function CartPage() {
             {/* Cart Items List */}
             {items.map((item) => (
               <div
-                key={item.bookId}
+                key={item.variantId}
                 className="bg-white p-4 rounded-lg shadow-sm flex flex-col md:flex-row items-center gap-4 relative"
               >
                 {/* Product Info */}
                 <div className="w-full md:w-1/2 flex items-center gap-4">
-                  <div className="w-20 h-28 bg-gray-100 rounded border flex shrink-0 items-center justify-center">
-                    <span className="text-xs text-gray-400">No Image</span>
+                  <div className="w-20 h-28 bg-gray-100 rounded border flex shrink-0 items-center justify-center overflow-hidden">
+                    {item.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs text-gray-400">No Image</span>
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <Link
@@ -84,7 +93,7 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setQuantity(item.bookId, item.quantity - 1)
+                        setQuantity(item.variantId, item.quantity - 1)
                       }
                       className="px-3 py-1.5 hover:bg-gray-100 text-gray-600"
                     >
@@ -99,7 +108,7 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setQuantity(item.bookId, item.quantity + 1)
+                        setQuantity(item.variantId, item.quantity + 1)
                       }
                       className="px-3 py-1.5 hover:bg-gray-100 text-gray-600"
                     >
@@ -119,7 +128,7 @@ export default function CartPage() {
                 {/* Delete Button */}
                 <button
                   type="button"
-                  onClick={() => remove(item.bookId)}
+                  onClick={() => remove(item.variantId)}
                   className="absolute top-4 right-4 md:static md:w-12 flex justify-end text-gray-400 hover:text-red-500 transition-colors"
                 >
                   <Trash2 className="w-5 h-5" />

@@ -20,7 +20,9 @@ function ProductsContent() {
     queryKey: ["categories"],
     queryFn: async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api"}/categories`);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api"}/categories`,
+        );
         return res.data || [];
       } catch (e) {
         return [
@@ -47,7 +49,9 @@ function ProductsContent() {
     filteredBooks = filteredBooks.filter(
       (book: any) =>
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.author?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+        book.authors?.some((a: string) =>
+          a.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
     );
   }
 
@@ -166,13 +170,21 @@ function ProductsContent() {
                       <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                       <span className="text-xs text-gray-400 ml-1">(0)</span>
                     </div>
-                    <div className="mt-auto">
+                    <div className="mt-auto flex items-center gap-2">
                       <span className="font-bold text-[#c92127] text-lg">
                         {new Intl.NumberFormat("vi-VN", {
                           style: "currency",
                           currency: "VND",
-                        }).format(book.price || 0)}
+                        }).format(book.sellingPrice || 0)}
                       </span>
+                      {book.listPrice && book.listPrice > book.sellingPrice && (
+                        <span className="text-gray-400 text-sm line-through">
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(book.listPrice)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>

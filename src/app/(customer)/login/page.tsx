@@ -43,12 +43,12 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await authService.login({ 
-        email: values.email, 
-        password: values.password 
+      const result = await authService.login({
+        email: values.email,
+        password: values.password,
       });
       setAuth(result.accessToken, result.user);
-      
+
       if (result.user.role === "ADMIN") {
         router.push("/admin");
       } else {

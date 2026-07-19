@@ -1,5 +1,5 @@
 "use client";
-import React, { use, useState } from "react";
+import React, { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useGetBook } from "@/hooks/useBooks";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/stores/cart.store";
 import { toast } from "sonner";
+import clsx from "clsx";
 
 export default function BookDetailPage({
   params,
@@ -24,19 +25,33 @@ export default function BookDetailPage({
   const { id } = resolvedParams;
 
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState("description");
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
+    null,
+  );
   const addToCart = useCartStore((state) => state.add);
 
   const { data: book, isLoading } = useGetBook(id);
 
+  useEffect(() => {
+    if (book?.variants && book.variants.length > 0 && !selectedVariantId) {
+      setSelectedVariantId(book.variants[0].id);
+    }
+  }, [book, selectedVariantId]);
+
+  const selectedVariant =
+    book?.variants?.find((v: any) => v.id === selectedVariantId) ||
+    book?.variants?.[0];
+
   const handleAddToCart = () => {
-    if (!book) return;
+    if (!book || !selectedVariant) return;
     addToCart({
+      variantId: selectedVariant.id,
       bookId: book.id,
-      title: book.title,
-      price: Number(book.price),
-      stock: book.stock,
+      title: `${book.title} - ${selectedVariant.format}`,
+      price: Number(selectedVariant.sellingPrice),
+      stock: selectedVariant.stock,
       quantity: quantity,
+      imageUrl: selectedVariant.imageUrl,
     });
     toast.success("Đã thêm vào giỏ hàng!");
   };
@@ -79,91 +94,160 @@ export default function BookDetailPage({
       {/* Main Info Box */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Product Image */}
+          {/* Product Image and Actions (Left Column) */}
           <div className="w-full md:w-2/5 lg:w-1/3 flex flex-col items-center">
-            <div className="aspect-[3/4] w-full max-w-[300px] bg-gray-100 rounded-lg flex items-center justify-center border relative overflow-hidden">
-              <span className="text-gray-400">Chưa có ảnh</span>
-              {/* placeholder img tag */}
+            <div className="aspect-[3/4] w-full max-w-[300px] bg-gray-100 rounded-lg flex items-center justify-center border relative overflow-hidden mb-6">
+              {selectedVariant?.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={selectedVariant.imageUrl}
+                  alt={book.title}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <span className="text-gray-400">Chưa có ảnh</span>
+              )}
             </div>
-            <div className="flex justify-center mt-6 space-x-6 w-full">
-              <button className="text-gray-600 hover:text-[#c92127] flex items-center text-sm font-medium transition-colors">
-                <Heart className="w-5 h-5 mr-2" /> Thêm vào yêu thích
+
+            <div className="w-full max-w-[300px] flex flex-col gap-3">
+              <div className="flex gap-2 w-full">
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={!selectedVariant || selectedVariant.stock === 0}
+                  className="flex-1 bg-white border-2 border-[#c92127] text-[#c92127] hover:bg-red-50 hover:text-[#c92127] h-12 text-sm font-bold shadow-sm px-2 disabled:opacity-50"
+                >
+                  <ShoppingCart className="w-5 h-5 mr-1" /> Thêm vào giỏ hàng
+                </Button>
+                <Button
+                  disabled={!selectedVariant || selectedVariant.stock === 0}
+                  className="flex-1 bg-[#c92127] hover:bg-red-700 text-white h-12 text-sm font-bold shadow-sm px-2 disabled:opacity-50"
+                >
+                  Mua ngay
+                </Button>
+              </div>
+              <button className="text-gray-500 hover:text-[#c92127] flex items-center justify-center text-sm font-medium transition-colors mt-2">
+                <Heart className="w-4 h-4 mr-1" /> Thêm vào yêu thích
               </button>
             </div>
           </div>
 
-          {/* Product Info */}
-          <div className="w-full md:w-3/5 lg:w-2/3 space-y-5">
+          {/* Product Info (Right Column) */}
+          <div className="w-full md:w-3/5 lg:w-2/3 space-y-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 leading-tight mb-2">
+              <h1 className="text-2xl font-bold text-gray-800 leading-tight mb-4">
                 {book.title}
               </h1>
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
+
+              {/* Meta Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 text-sm text-gray-600 mb-6">
                 <p>
                   Nhà cung cấp:{" "}
-                  <span className="font-semibold text-blue-600">FAHASA</span>
+                  <span className="font-semibold text-blue-600">
+                    {book?.provider || "FAHASA"}
+                  </span>
                 </p>
                 <p>
                   Tác giả:{" "}
                   <span className="font-semibold text-gray-800">
-                    {book?.author?.name || "Đang cập nhật"}
+                    {book?.authors?.join(", ") || "Đang cập nhật"}
                   </span>
                 </p>
                 <p>
-                  Thể loại:{" "}
+                  Nhà xuất bản:{" "}
                   <span className="font-semibold text-gray-800">
-                    {book?.category?.name || "Đang cập nhật"}
+                    {book?.publisher || "Đang cập nhật"}
+                  </span>
+                </p>
+                <p>
+                  Hình thức bìa:{" "}
+                  <span className="font-semibold text-gray-800">
+                    {selectedVariant?.format || "Đang cập nhật"}
                   </span>
                 </p>
               </div>
             </div>
 
             {/* Price Box */}
-            <div className="bg-gray-50 p-4 rounded-md flex items-center gap-4">
+            <div className="flex items-center gap-4 py-2">
               <div className="text-3xl font-bold text-[#c92127]">
                 {new Intl.NumberFormat("vi-VN", {
                   style: "currency",
                   currency: "VND",
-                }).format(book.price || 0)}
+                }).format(selectedVariant?.sellingPrice || 0)}
               </div>
-              {/* Giả lập giá cũ và % giảm */}
-              <div className="text-sm text-gray-400 line-through">
-                {new Intl.NumberFormat("vi-VN", {
-                  style: "currency",
-                  currency: "VND",
-                }).format((book.price || 0) * 1.2)}
-              </div>
-              <div className="bg-[#c92127] text-white text-xs font-bold px-2 py-1 rounded">
-                -20%
-              </div>
+              {selectedVariant?.listPrice &&
+                selectedVariant.listPrice > selectedVariant.sellingPrice && (
+                  <>
+                    <div className="text-base text-gray-400 line-through">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(selectedVariant.listPrice)}
+                    </div>
+                    <div className="bg-[#c92127] text-white text-xs font-bold px-2 py-1 rounded">
+                      -
+                      {Math.round(
+                        (1 -
+                          selectedVariant.sellingPrice /
+                            selectedVariant.listPrice) *
+                          100,
+                      )}
+                      %
+                    </div>
+                  </>
+                )}
             </div>
+
+            {/* Variant Selector */}
+            {book?.variants && book.variants.length > 0 && (
+              <div className="py-4">
+                <p className="text-sm font-semibold text-gray-800 mb-2">
+                  Chọn Phiên Bản:
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {book.variants.map((v: any) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariantId(v.id)}
+                      className={clsx(
+                        "px-4 py-2 border rounded-md text-sm font-medium transition-colors",
+                        selectedVariantId === v.id
+                          ? "border-[#c92127] text-[#c92127] bg-red-50"
+                          : "border-gray-300 text-gray-700 hover:border-gray-400",
+                      )}
+                    >
+                      {v.format} -{" "}
+                      {new Intl.NumberFormat("vi-VN").format(v.sellingPrice)} đ
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Policies */}
-            <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 py-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 text-sm text-gray-600 py-4 border-t border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
-                  <Truck className="w-4 h-4" />
-                </div>
-                <span>Thời gian giao hàng: 2-3 ngày</span>
+                <Truck className="w-5 h-5 text-gray-500" />
+                Thời gian giao hàng:{" "}
+                <span className="font-semibold text-gray-800">2-3 ngày</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
-                  <Star className="w-4 h-4" />
-                </div>
-                <span>Chính sách đổi trả: 30 ngày</span>
+                <Star className="w-5 h-5 text-gray-500" />
+                Chính sách đổi trả:{" "}
+                <span className="font-semibold text-gray-800">30 ngày</span>
               </div>
             </div>
 
-            {/* Quantity and Actions */}
-            <div className="pt-6 border-t">
-              <div className="flex items-center gap-4 mb-6">
+            {/* Quantity */}
+            <div className="pt-2">
+              <div className="flex items-center gap-4">
                 <span className="text-gray-700 font-semibold w-24">
                   Số lượng:
                 </span>
-                <div className="flex items-center border rounded-md bg-white">
+                <div className="flex items-center border border-gray-300 rounded bg-white">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-4 py-2 hover:bg-gray-100 text-gray-600 transition-colors"
+                    className="px-3 py-1.5 hover:bg-gray-100 text-gray-600 transition-colors"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
@@ -171,92 +255,127 @@ export default function BookDetailPage({
                     type="number"
                     value={quantity}
                     readOnly
-                    className="w-12 text-center py-2 focus:outline-none font-semibold text-gray-800 border-x"
+                    className="w-10 text-center py-1.5 focus:outline-none font-semibold text-gray-800 border-x border-gray-300"
                   />
                   <button
                     onClick={() =>
-                      setQuantity(Math.min(quantity + 1, book.stock || 1))
+                      setQuantity(
+                        Math.min(quantity + 1, selectedVariant?.stock || 1),
+                      )
                     }
-                    className="px-4 py-2 hover:bg-gray-100 text-gray-600 transition-colors"
+                    className="px-3 py-1.5 hover:bg-gray-100 text-gray-600 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
                 <span className="text-sm text-gray-500">
-                  ({book.stock || 0} sản phẩm có sẵn)
+                  ({selectedVariant?.stock || 0} sản phẩm có sẵn)
                 </span>
-              </div>
-
-              <div className="flex gap-4 max-w-md">
-                <Button
-                  onClick={handleAddToCart}
-                  className="flex-1 bg-white border-2 border-[#c92127] text-[#c92127] hover:bg-red-50 hover:text-[#c92127] h-12 text-base font-bold shadow-sm"
-                >
-                  <ShoppingCart className="w-5 h-5 mr-2" /> Thêm vào giỏ hàng
-                </Button>
-                <Button className="flex-1 bg-[#c92127] hover:bg-red-700 text-white h-12 text-base font-bold shadow-sm">
-                  Mua ngay
-                </Button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Detail Tabs */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="flex border-b">
-          <button
-            className={`px-6 py-4 font-bold text-sm uppercase transition-colors ${activeTab === "description" ? "text-[#c92127] border-b-2 border-[#c92127]" : "text-gray-500 hover:text-gray-800"}`}
-            onClick={() => setActiveTab("description")}
-          >
-            Mô tả sản phẩm
-          </button>
-          <button
-            className={`px-6 py-4 font-bold text-sm uppercase transition-colors ${activeTab === "reviews" ? "text-[#c92127] border-b-2 border-[#c92127]" : "text-gray-500 hover:text-gray-800"}`}
-            onClick={() => setActiveTab("reviews")}
-          >
-            Đánh giá khách hàng
-          </button>
-        </div>
-
-        <div className="p-6">
-          {activeTab === "description" && (
-            <div className="text-gray-700 leading-relaxed text-sm whitespace-pre-line">
-              {book.description ||
-                "Nhà xuất bản chưa cung cấp thông tin chi tiết cho cuốn sách này."}
-            </div>
-          )}
-
-          {activeTab === "reviews" && (
-            <div className="flex flex-col items-center justify-center py-10 text-gray-500">
-              <Star className="w-12 h-12 text-gray-300 mb-3" />
-              <p>Chưa có đánh giá nào cho sản phẩm này.</p>
-              <Button variant="outline" className="mt-4">
-                Viết đánh giá
-              </Button>
-            </div>
-          )}
-        </div>
+      {/* Thông tin chi tiết */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-800 uppercase mb-4">
+          Thông tin chi tiết
+        </h2>
+        <table className="w-full text-sm text-gray-600 border-collapse max-w-4xl">
+          <tbody>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium w-48 text-gray-500">
+                Mã hàng
+              </td>
+              <td className="py-3 text-gray-900">
+                {selectedVariant?.sku || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">
+                Nhà cung cấp
+              </td>
+              <td className="py-3 text-blue-600">
+                {book.provider || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">Tác giả</td>
+              <td className="py-3 text-gray-900">
+                {book.authors?.join(", ") || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">
+                Người dịch
+              </td>
+              <td className="py-3 text-gray-900">
+                {book.translators?.join(", ") || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">
+                Nhà xuất bản
+              </td>
+              <td className="py-3 text-gray-900">
+                {book.publisher || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">
+                Năm xuất bản
+              </td>
+              <td className="py-3 text-gray-900">
+                {book.publishYear || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">
+                Trọng lượng (gr)
+              </td>
+              <td className="py-3 text-gray-900">
+                {selectedVariant?.weight || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">
+                Kích thước
+              </td>
+              <td className="py-3 text-gray-900">
+                {selectedVariant?.dimensions || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">Số trang</td>
+              <td className="py-3 text-gray-900">
+                {selectedVariant?.pages || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="py-3 pr-4 font-medium text-gray-500">Hình thức</td>
+              <td className="py-3 text-gray-900">
+                {selectedVariant?.format || "Đang cập nhật"}
+              </td>
+            </tr>
+            <tr>
+              <td className="py-3 pr-4 font-medium text-gray-500">Ngôn ngữ</td>
+              <td className="py-3 text-gray-900">
+                {book.language || "Đang cập nhật"}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      {/* Related Products - Placeholder */}
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h3 className="text-lg font-bold text-gray-800 uppercase mb-4">
-          Sản phẩm liên quan
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {/* Skeleton placeholders */}
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="flex flex-col gap-2 p-2 border border-transparent hover:border-gray-100 hover:shadow-md rounded-lg transition-all cursor-pointer"
-            >
-              <div className="aspect-[3/4] bg-gray-100 rounded-md animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse mt-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse mt-1"></div>
-            </div>
-          ))}
+      {/* Mô tả sản phẩm */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-800 uppercase mb-4">
+          Mô tả sản phẩm
+        </h2>
+        <div className="text-gray-700 leading-relaxed text-sm whitespace-pre-line">
+          {book.description ||
+            "Nhà xuất bản chưa cung cấp thông tin chi tiết cho cuốn sách này."}
         </div>
       </div>
     </div>

@@ -30,7 +30,8 @@ export const useCreateBook = () => {
 export const useUpdateBook = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number | string; data: any }) => booksService.update(id, data),
+    mutationFn: ({ id, data }: { id: number | string; data: any }) =>
+      booksService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["books"] });
       queryClient.invalidateQueries({ queryKey: ["admin-books"] });
