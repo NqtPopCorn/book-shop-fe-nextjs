@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { ProductFormModal } from "@/components/admin/products/ProductFormModal";
+import { ProductForm } from "@/components/admin/products/ProductForm";
 import { useDeleteBook } from "@/hooks/useBooks";
 import { toast } from "sonner";
 
 export default function AdminProductsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [view, setView] = useState<"LIST" | "FORM">("LIST");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const deleteBook = useDeleteBook();
 
@@ -24,12 +24,17 @@ export default function AdminProductsPage() {
 
   const handleAdd = () => {
     setSelectedProduct(null);
-    setIsModalOpen(true);
+    setView("FORM");
   };
 
   const handleEdit = (product: any) => {
     setSelectedProduct(product);
-    setIsModalOpen(true);
+    setView("FORM");
+  };
+
+  const handleCloseForm = () => {
+    setView("LIST");
+    setSelectedProduct(null);
   };
 
   const { data: books, isLoading } = useQuery({
@@ -39,31 +44,23 @@ export default function AdminProductsPage() {
         const res = await axios.get("http://localhost:8080/api/books");
         return res.data;
       } catch (e) {
-        return [
-          {
-            id: 1,
-            title: "Clean Code: A Handbook of Agile Software Craftsmanship",
-            price: 550000,
-            stock: 50,
-            author: { name: "Robert C. Martin" },
-          },
-          {
-            id: 2,
-            title: "Chí Phèo",
-            price: 85000,
-            stock: 100,
-            author: { name: "Nam Cao" },
-          },
-        ];
+        return [];
       }
     },
   });
+
+  if (view === "FORM") {
+    return <ProductForm onClose={handleCloseForm} product={selectedProduct} />;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleAdd}>
+        <Button
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={handleAdd}
+        >
           <Plus className="w-4 h-4 mr-2" /> Thêm sách mới
         </Button>
       </div>
@@ -82,10 +79,10 @@ export default function AdminProductsPage() {
                 Tác giả
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Giá
+                Giá (Bán)
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tồn kho
+                Số phiên bản
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Hành động
@@ -99,53 +96,67 @@ export default function AdminProductsPage() {
                   Đang tải...
                 </td>
               </tr>
+            ) : books?.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-4 text-gray-500">
+                  Chưa có sản phẩm nào.
+                </td>
+              </tr>
             ) : (
-              books?.map((book: any) => (
-                <tr key={book.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    #{book.id}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900 line-clamp-1 max-w-[300px]">
-                    {book.title}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {book.author?.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(book.price)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {book.stock}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button 
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                      onClick={() => handleEdit(book)}
-                    >
-                      <Edit className="w-4 h-4 inline" />
-                    </button>
-                    <button 
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => handleDelete(book.id)}
-                    >
-                      <Trash2 className="w-4 h-4 inline" />
-                    </button>
-                  </td>
-                </tr>
-              ))
+              books?.map((book: any) => {
+                const minPrice = Math.min(
+                  ...(book.variants?.map((v: any) => v.sellingPrice) || [0]),
+                );
+                const maxPrice = Math.max(
+                  ...(book.variants?.map((v: any) => v.sellingPrice) || [0]),
+                );
+
+                let priceDisplay = new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                }).format(minPrice);
+                if (minPrice !== maxPrice && maxPrice > 0) {
+                  priceDisplay += ` - ${new Intl.NumberFormat("vi-VN").format(maxPrice)} đ`;
+                }
+
+                return (
+                  <tr key={book.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      #{book.id}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 line-clamp-1 max-w-[300px]">
+                      {book.title}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {book.authors?.[0] || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {book.variants?.length ? priceDisplay : "Đang cập nhật"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {book.variants?.length || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                        onClick={() => handleEdit(book)}
+                      >
+                        <Edit className="w-4 h-4 inline" />
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => handleDelete(book.id)}
+                      >
+                        <Trash2 className="w-4 h-4 inline" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
-
-      <ProductFormModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        product={selectedProduct} 
-      />
     </div>
   );
 }
