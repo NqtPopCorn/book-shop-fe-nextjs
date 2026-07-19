@@ -5,7 +5,7 @@ export const promotionsService = {
     const res = await api.get(`/promotions/check/${code}`);
     return res.data;
   },
-  
+
   getAll: async () => {
     const res = await api.get("/promotions");
     return res.data;
@@ -24,5 +24,5 @@ export const promotionsService = {
   remove: async (id: number) => {
     const res = await api.delete(`/promotions/${id}`);
     return res.data;
-  }
+  },
 };

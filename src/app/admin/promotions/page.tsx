@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import {
@@ -13,39 +13,38 @@ import {
 } from "@/components/ui/table";
 import { useGetPromotions, useDeletePromotion } from "@/hooks/usePromotions";
 import { toast } from "sonner";
-import { PromotionFormModal } from "@/components/admin/promotions/PromotionFormModal";
+import { useRouter } from "next/navigation";
 
 export default function PromotionsPage() {
   const { data: promotions, isLoading } = useGetPromotions();
   const deletePromotion = useDeletePromotion();
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPromo, setSelectedPromo] = useState<any>(null);
+  const router = useRouter();
 
   const handleDelete = (id: number) => {
     if (confirm("Xóa mã khuyến mãi này?")) {
       deletePromotion.mutate(id, {
         onSuccess: () => toast.success("Đã xóa"),
-        onError: () => toast.error("Có lỗi xảy ra")
+        onError: () => toast.error("Có lỗi xảy ra"),
       });
     }
   };
 
-  const handleEdit = (promo: any) => {
-    setSelectedPromo(promo);
-    setIsModalOpen(true);
+  const handleEdit = (id: number) => {
+    router.push(`/admin/promotions/${id}`);
   };
 
   const handleCreate = () => {
-    setSelectedPromo(null);
-    setIsModalOpen(true);
+    router.push(`/admin/promotions/create`);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Quản lý Khuyến mãi</h1>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleCreate}>
+        <Button
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={handleCreate}
+        >
           <Plus className="w-4 h-4 mr-2" /> Thêm Khuyến mãi
         </Button>
       </div>
@@ -65,44 +64,65 @@ export default function PromotionsPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4 text-gray-500">Đang tải...</TableCell>
-              </TableRow>
-            ) : promotions?.map((promo: any) => (
-              <TableRow key={promo.id}>
-                <TableCell className="font-medium">Mã KM #{promo.id}</TableCell>
-                <TableCell><span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{promo.code}</span></TableCell>
-                <TableCell className="text-orange-600 font-bold">{promo.percentage ? `${promo.percentage}%` : 'Theo Rule'}</TableCell>
-                <TableCell className="text-sm text-gray-600">
-                  {new Date(promo.createdAt).toLocaleDateString("vi-VN")} - {promo.expiresAt ? new Date(promo.expiresAt).toLocaleDateString("vi-VN") : "Không thời hạn"}
-                </TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold 
-                    ${promo.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {promo.active ? "Hoạt động" : "Tạm dừng"}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <button className="text-blue-600 hover:text-blue-900 mr-4" onClick={() => handleEdit(promo)}>
-                    <Edit className="w-4 h-4 inline" />
-                  </button>
-                  <button 
-                    className="text-red-600 hover:text-red-900"
-                    onClick={() => handleDelete(promo.id)}
-                  >
-                    <Trash2 className="w-4 h-4 inline" />
-                  </button>
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-4 text-gray-500"
+                >
+                  Đang tải...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              promotions?.map((promo: any) => (
+                <TableRow key={promo.id}>
+                  <TableCell className="font-medium">
+                    Mã KM #{promo.id}
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">
+                      {promo.code}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-orange-600 font-bold">
+                    {promo.actions?.type === "line_item_percentage"
+                      ? `${promo.actions.value?.percentage}% (Sản phẩm)`
+                      : promo.percentage
+                        ? `${promo.percentage}%`
+                        : "Theo Rule"}
+                  </TableCell>
+                  <TableCell className="text-sm text-gray-600">
+                    {new Date(promo.createdAt).toLocaleDateString("vi-VN")} -{" "}
+                    {promo.expiresAt
+                      ? new Date(promo.expiresAt).toLocaleDateString("vi-VN")
+                      : "Không thời hạn"}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold 
+                    ${promo.active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                    >
+                      {promo.active ? "Hoạt động" : "Tạm dừng"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <button
+                      className="text-blue-600 hover:text-blue-900 mr-4"
+                      onClick={() => handleEdit(promo.id)}
+                    >
+                      <Edit className="w-4 h-4 inline" />
+                    </button>
+                    <button
+                      className="text-red-600 hover:text-red-900"
+                      onClick={() => handleDelete(promo.id)}
+                    >
+                      <Trash2 className="w-4 h-4 inline" />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
-      
-      <PromotionFormModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        promotion={selectedPromo}
-      />
     </div>
   );
 }

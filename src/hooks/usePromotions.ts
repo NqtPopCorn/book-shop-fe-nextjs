@@ -15,11 +15,28 @@ export const useGetPromotions = () => {
     queryKey: ["admin-promotions"],
     queryFn: async () => {
       const res = await axios.get("http://localhost:8080/api/promotions", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       return res.data;
     },
     enabled: !!token,
+  });
+};
+
+export const useGetPromotion = (id: string) => {
+  const token = useAuthStore((state) => state.token);
+  return useQuery({
+    queryKey: ["admin-promotion", id],
+    queryFn: async () => {
+      const res = await axios.get(
+        `http://localhost:8080/api/promotions/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      return res.data;
+    },
+    enabled: !!token && !!id && id !== "create",
   });
 };
 
@@ -28,9 +45,13 @@ export const useCreatePromotion = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: any) => {
-      const res = await axios.post("http://localhost:8080/api/promotions", data, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(
+        "http://localhost:8080/api/promotions",
+        data,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       return res.data;
     },
     onSuccess: () => {
@@ -44,9 +65,13 @@ export const useUpdatePromotion = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      const res = await axios.patch(`http://localhost:8080/api/promotions/${id}`, data, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.patch(
+        `http://localhost:8080/api/promotions/${id}`,
+        data,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       return res.data;
     },
     onSuccess: () => {
@@ -60,9 +85,12 @@ export const useDeletePromotion = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const res = await axios.delete(`http://localhost:8080/api/promotions/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.delete(
+        `http://localhost:8080/api/promotions/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       return res.data;
     },
     onSuccess: () => {
