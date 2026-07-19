@@ -1,5 +1,26 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 type User = { id: number; email: string; role: string };
-type AuthState = { token: string | null; user: User | null; setAuth: (token: string, user: User) => void; logout: () => void };
-export const useAuthStore = create<AuthState>()(persist((set) => ({ token: null, user: null, setAuth: (token, user) => { localStorage.setItem('accessToken', token); set({ token, user }); }, logout: () => { localStorage.removeItem('accessToken'); set({ token: null, user: null }); } }), { name: 'book-shop-auth' }));
+type AuthState = {
+  token: string | null;
+  user: User | null;
+  setAuth: (token: string, user: User) => void;
+  logout: () => void;
+};
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      setAuth: (token, user) => {
+        localStorage.setItem("accessToken", token);
+        set({ token, user });
+      },
+      logout: () => {
+        localStorage.removeItem("accessToken");
+        set({ token: null, user: null });
+      },
+    }),
+    { name: "book-shop-auth" },
+  ),
+);
