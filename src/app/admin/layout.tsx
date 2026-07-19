@@ -97,7 +97,12 @@ export default function AdminLayout({
             <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center">
               {user.email.charAt(0).toUpperCase()}
             </div>
-            <span className="font-medium line-clamp-1 max-w-[120px]" title={user.email}>{user.email}</span>
+            <span
+              className="font-medium line-clamp-1 max-w-[120px]"
+              title={user.email}
+            >
+              {user.email}
+            </span>
           </div>
           <button className="text-gray-500 hover:text-gray-700">
             <Menu className="w-5 h-5" />
@@ -128,7 +133,7 @@ export default function AdminLayout({
             <Home className="w-5 h-5 mr-3" />
             <span>Go to Home</span>
           </Link>
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center px-4 py-2 w-full text-left text-red-600 hover:bg-red-50 rounded-md"
           >

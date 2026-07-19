@@ -8,7 +8,7 @@ export const useGetAccounts = () => {
     queryKey: ["admin-accounts"],
     queryFn: async () => {
       const res = await axios.get("http://localhost:8080/api/account", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       return res.data;
     },
@@ -21,9 +21,13 @@ export const useUpdateAccountStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const res = await axios.patch(`http://localhost:8080/api/account/${id}/status`, { status }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.patch(
+        `http://localhost:8080/api/account/${id}/status`,
+        { status },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       return res.data;
     },
     onSuccess: () => {

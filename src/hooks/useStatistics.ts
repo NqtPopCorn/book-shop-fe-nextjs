@@ -19,9 +19,12 @@ export const useGetRevenueStats = () => {
   return useQuery({
     queryKey: ["admin-revenue"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:8080/api/statistics/revenue", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(
+        "http://localhost:8080/api/statistics/revenue",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       return res.data;
     },
     enabled: !!token,
@@ -33,9 +36,12 @@ export const useGetStockStats = () => {
   return useQuery({
     queryKey: ["admin-stock"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:8080/api/statistics/stock", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(
+        "http://localhost:8080/api/statistics/stock",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       return res.data;
     },
     enabled: !!token,

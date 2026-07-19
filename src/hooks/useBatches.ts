@@ -8,7 +8,7 @@ export const useGetBatches = () => {
     queryKey: ["admin-batches"],
     queryFn: async () => {
       const res = await axios.get("http://localhost:8080/api/batches", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       return res.data;
     },
@@ -20,9 +20,13 @@ export const useCreateBatch = () => {
   const token = useAuthStore((state) => state.token);
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { code: string; bookId: number; quantity: number }) => {
+    mutationFn: async (data: {
+      code: string;
+      bookId: number;
+      quantity: number;
+    }) => {
       const res = await axios.post(`http://localhost:8080/api/batches`, data, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       return res.data;
     },

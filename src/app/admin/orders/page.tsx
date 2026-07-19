@@ -70,7 +70,11 @@ export default function AdminOrdersPage() {
               </TableRow>
             ) : (
               orders?.map((order: any) => (
-                <TableRow key={order.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleViewOrder(order)}>
+                <TableRow
+                  key={order.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleViewOrder(order)}
+                >
                   <TableCell className="font-medium">#{order.id}</TableCell>
                   <TableCell>{order.user?.email}</TableCell>
                   <TableCell>
@@ -86,7 +90,10 @@ export default function AdminOrdersPage() {
                       {order.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right space-x-2" onClick={(e) => e.stopPropagation()}>
+                  <TableCell
+                    className="text-right space-x-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {order.status === "PENDING" && (
                       <>
                         <Button
@@ -152,10 +159,10 @@ export default function AdminOrdersPage() {
         </Table>
       </div>
 
-      <OrderDetailModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        order={selectedOrder} 
+      <OrderDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        order={selectedOrder}
       />
     </div>
   );
