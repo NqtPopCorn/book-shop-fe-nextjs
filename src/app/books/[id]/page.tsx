@@ -1,8 +1,0 @@
-'use client';
-import { useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { api } from '@/lib/api';
-import { useCartStore } from '@/stores/cart.store';
-type Book = { id: number; title: string; description?: string; price: string | number; stock: number };
-export default function BookDetailPage() { const { id } = useParams<{ id: string }>(); const add = useCartStore((s) => s.add); const { data, isLoading } = useQuery({ queryKey: ['book', id], queryFn: async () => (await api.get<Book>(`/books/${id}`)).data, enabled: Boolean(id) }); if (isLoading) return <main className="p-10">Đang tải...</main>; if (!data) return <main className="p-10">Không tìm thấy sách.</main>; return <main className="min-h-screen bg-slate-50"><header className="border-b bg-white p-4"><Link href="/books" className="text-orange-600">← Quay lại</Link></header><section className="mx-auto grid max-w-5xl gap-8 px-6 py-12 md:grid-cols-2"><div className="flex aspect-square items-center justify-center rounded-xl bg-orange-50 text-8xl">📚</div><div><h1 className="text-4xl font-bold">{data.title}</h1><p className="mt-5 text-slate-600">{data.description || 'Chưa có mô tả.'}</p><p className="mt-8 text-3xl font-bold text-orange-600">{Number(data.price).toLocaleString('vi-VN')}đ</p><p className="mt-2 text-sm text-slate-500">Còn lại: {data.stock}</p><button disabled={!data.stock} onClick={() => add({ bookId: data.id, title: data.title, price: Number(data.price), stock: data.stock })} className="mt-8 rounded-md bg-orange-500 px-6 py-3 font-medium text-white hover:bg-orange-600 disabled:opacity-50">Thêm vào giỏ</button></div></section></main> }

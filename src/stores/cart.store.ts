@@ -1,5 +1,54 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-export type CartItem = { bookId: number; title: string; price: number; quantity: number; stock: number };
-type CartState = { items: CartItem[]; add: (item: Omit<CartItem, 'quantity'>) => void; remove: (bookId: number) => void; setQuantity: (bookId: number, quantity: number) => void; clear: () => void; total: () => number };
-export const useCartStore = create<CartState>()(persist((set, get) => ({ items: [], add: (item) => set((state) => { const existing = state.items.find((x) => x.bookId === item.bookId); return { items: existing ? state.items.map((x) => x.bookId === item.bookId ? { ...x, quantity: Math.min(x.quantity + 1, x.stock) } : x) : [...state.items, { ...item, quantity: 1 }] }; }), remove: (bookId) => set((state) => ({ items: state.items.filter((x) => x.bookId !== bookId) })), setQuantity: (bookId, quantity) => set((state) => ({ items: state.items.map((x) => x.bookId === bookId ? { ...x, quantity: Math.max(1, Math.min(quantity, x.stock)) } : x) })), clear: () => set({ items: [] }), total: () => get().items.reduce((sum, item) => sum + item.price * item.quantity, 0) }), { name: 'book-shop-cart' }));
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+export type CartItem = {
+  bookId: number;
+  title: string;
+  price: number;
+  quantity: number;
+  stock: number;
+};
+type CartState = {
+  items: CartItem[];
+  add: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
+  remove: (bookId: number) => void;
+  setQuantity: (bookId: number, quantity: number) => void;
+  clear: () => void;
+  total: () => number;
+};
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      add: (item) =>
+        set((state) => {
+          const addQty = item.quantity || 1;
+          const existing = state.items.find((x) => x.bookId === item.bookId);
+          return {
+            items: existing
+              ? state.items.map((x) =>
+                  x.bookId === item.bookId
+                    ? { ...x, quantity: Math.min(x.quantity + addQty, x.stock) }
+                    : x,
+                )
+              : [...state.items, { ...item, quantity: addQty }],
+          };
+        }),
+      remove: (bookId) =>
+        set((state) => ({
+          items: state.items.filter((x) => x.bookId !== bookId),
+        })),
+      setQuantity: (bookId, quantity) =>
+        set((state) => ({
+          items: state.items.map((x) =>
+            x.bookId === bookId
+              ? { ...x, quantity: Math.max(1, Math.min(quantity, x.stock)) }
+              : x,
+          ),
+        })),
+      clear: () => set({ items: [] }),
+      total: () =>
+        get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    }),
+    { name: "book-shop-cart" },
+  ),
+);
